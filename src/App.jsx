@@ -9,7 +9,7 @@ import Register from "./components/Register";
 import ResetSenha from "./components/ResetSenha";
 import LandingPage from "./components/LandingPage";
 
-const API_URL = "https://financial-control-ji39.onrender.com/contas"; 
+const API_URL = "https://financial-control-ji39.onrender.com/contas";
 
 export default function App() {
   const [contas, setContas] = useState([]);
@@ -39,13 +39,14 @@ export default function App() {
   }, [userId, mesSelecionado, anoSelecionado]);
 
   useEffect(() => {
-    fetch("https://financial-control-ji39.onrender.com/me", { credentials: "include" })
+    fetch("https://financial-control-ji39.onrender.com/me", {
+      credentials: "include",
+    })
       .then((res) => res.json())
       .then((data) => {
         if (data.user_id) setUserId(data.user_id);
       });
   }, []);
-
 
   const contasFiltradas = contas.filter(
     (c) => c.mes === mesSelecionado && c.ano === anoSelecionado
@@ -105,8 +106,38 @@ export default function App() {
 
   const removerConta = useCallback(
     async (id) => {
-      await fetch(`${API_URL}/${id}`, { method: "DELETE" });
-      setContas(contas.filter((c) => c.id !== id));
+      const conta = contas.find((c) => c.id === id);
+      if (!conta) return;
+
+      // Verifica se é uma conta parcelada pelo padrão na descrição
+      const match = conta.descricao.match(/^(.*)\s\(\d+\/(\d+)\)$/);
+      let contasParaRemover = [];
+
+      if (match) {
+        // Se for parcelada, pega o nome base e o total de parcelas
+        const descricaoBase = match[1];
+        const totalParcelas = Number(match[2]);
+        // Busca todas as parcelas com o mesmo nome base e total de parcelas
+        contasParaRemover = contas.filter(
+          (c) =>
+            c.descricao.startsWith(descricaoBase) &&
+            c.descricao.match(/\(\d+\/\d+\)$/) &&
+            c.descricao.endsWith(`/${totalParcelas})`)
+        );
+      } else {
+        // Se não for parcelada, remove só ela
+        contasParaRemover = [conta];
+      }
+
+      // Remove todas as contas encontradas
+      await Promise.all(
+        contasParaRemover.map((c) =>
+          fetch(`${API_URL}/${c.id}`, { method: "DELETE" })
+        )
+      );
+      setContas(
+        contas.filter((c) => !contasParaRemover.some((r) => r.id === c.id))
+      );
     },
     [contas]
   );
@@ -171,12 +202,15 @@ export default function App() {
   }, [contasFiltradas]);
 
   const realizarLogin = async (username, password) => {
-    const res = await fetch("https://financial-control-ji39.onrender.com/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, password }),
-      credentials: "include",
-    });
+    const res = await fetch(
+      "https://financial-control-ji39.onrender.com/login",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+        credentials: "include",
+      }
+    );
     const data = await res.json();
     if (res.ok) {
       setUserId(data.user_id);
