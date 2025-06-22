@@ -1,3 +1,4 @@
+import { NumericFormat } from "react-number-format";
 import { useState } from "react";
 import { categorias } from "../data/categorias";
 
@@ -8,18 +9,36 @@ export default function FormularioConta({ onAdicionar }) {
   const [vencimento, setVencimento] = useState("");
   const [parcelas, setParcelas] = useState(1);
 
-  const handleAdicionar = () => {
+  const handleAdicionar = (e) => {
+    e.preventDefault();
     const valorNum = parseFloat(valor.replace(",", "."));
     if (!descricao || !valorNum || !categoria) return;
-    onAdicionar({ descricao, valor: valorNum, categoria, vencimento, parcelas });
+    onAdicionar({
+      descricao,
+      valor: valorNum,
+      categoria,
+      vencimento,
+      parcelas,
+    });
     setDescricao("");
     setValor("");
     setVencimento("");
     setParcelas(1);
   };
 
+  // Verifica se a categoria é "Entradas" (ignora acentos, espaços, maiúsculas)
+  const isEntrada =
+    categoria &&
+    ["entrada", "entradas"].includes(
+      categoria
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .trim()
+        .toLowerCase()
+    );
+
   return (
-    <div className="flex flex-col gap-4 mb-6">
+    <form onSubmit={handleAdicionar} className="flex flex-col gap-2">
       <input
         type="text"
         placeholder="Descrição"
@@ -27,12 +46,16 @@ export default function FormularioConta({ onAdicionar }) {
         onChange={(e) => setDescricao(e.target.value)}
         className="p-2 rounded border"
       />
-      <input
-        type="text"
-        placeholder="Valor"
+      <NumericFormat
+        className="border rounded p-2"
         value={valor}
-        onChange={(e) => setValor(e.target.value)}
-        className="p-2 rounded border"
+        onValueChange={(values) => setValor(values.value)}
+        thousandSeparator="."
+        decimalSeparator=","
+        prefix="R$ "
+        allowNegative={false}
+        placeholder="R$ 0,00"
+        required
       />
       <select
         value={categoria}
@@ -58,11 +81,26 @@ export default function FormularioConta({ onAdicionar }) {
         placeholder="Parcelas"
       />
       <button
-        onClick={handleAdicionar}
-        className="bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
+        type="submit"
+        className={`
+          flex items-center justify-center gap-2
+          bg-gradient-to-r from-blue-600 to-blue-400
+          text-white py-2 rounded-lg font-semibold
+          shadow-md hover:from-green-500 hover:to-green-400
+          hover:scale-105 active:scale-95 transition-all duration-200
+          focus:outline-none focus:ring-2 focus:ring-blue-300
+        `}
       >
-        Adicionar Conta
+        {isEntrada ? (
+          <>
+            <span className="text-lg">➕</span> Adicionar Entrada
+          </>
+        ) : (
+          <>
+            <span className="text-lg">💸</span> Adicionar Conta
+          </>
+        )}
       </button>
-    </div>
+    </form>
   );
 }

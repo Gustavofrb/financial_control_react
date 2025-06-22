@@ -1,25 +1,29 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
-export default function Login({ onLogin, onShowRegister, onShowResetSenha }) {
+export default function Login({
+  onLogin,
+  onShowRegister,
+  onShowResetSenha,
+  erro,
+}) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [erro, setErro] = useState("");
+  const [lembrar, setLembrar] = useState(false);
 
-  const handleSubmit = async (e) => {
+  // Recupera usuário salvo
+  useEffect(() => {
+    const salvo = localStorage.getItem("usuario_salvo");
+    if (salvo) setUsername(salvo);
+  }, []);
+
+  const handleSubmit = (e) => {
     e.preventDefault();
-    setErro("");
-    const res = await fetch("http://localhost:5000/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, password }),
-      credentials: "include", // ESSENCIAL!
-    });
-    const data = await res.json();
-    if (res.ok) {
-      onLogin(username, password);
+    if (lembrar) {
+      localStorage.setItem("usuario_salvo", username);
     } else {
-      setErro(data.error || "Erro ao fazer login");
+      localStorage.removeItem("usuario_salvo");
     }
+    onLogin(username, password);
   };
 
   return (
@@ -41,6 +45,15 @@ export default function Login({ onLogin, onShowRegister, onShowResetSenha }) {
           onChange={(e) => setPassword(e.target.value)}
           required
         />
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={lembrar}
+            onChange={(e) => setLembrar(e.target.checked)}
+          />
+          Lembrar-me
+        </label>
+        {erro && <div className="text-red-600 text-sm">{erro}</div>}
         <button
           className="bg-blue-600 text-white rounded p-2 hover:bg-blue-700"
           type="submit"
@@ -61,7 +74,6 @@ export default function Login({ onLogin, onShowRegister, onShowResetSenha }) {
         >
           Esqueci minha senha
         </button>
-        {erro && <div className="text-red-600 text-sm">{erro}</div>}
       </form>
     </div>
   );
