@@ -9,7 +9,7 @@ export default function ResetSenha({ onVoltar }) {
     e.preventDefault();
     setMensagem("");
     setErro("");
-    const res = await fetch("http://localhost:5000/reset-senha", {
+    const res = await fetch("https://financial-control-ji39.onrender.com:5000/reset-senha", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email }),

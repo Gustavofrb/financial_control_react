@@ -9,7 +9,7 @@ import Register from "./components/Register";
 import ResetSenha from "./components/ResetSenha";
 import LandingPage from "./components/LandingPage";
 
-const API_URL = "http://localhost:5000/contas"; 
+const API_URL = "https://financial-control-ji39.onrender.com/contas"; 
 
 export default function App() {
   const [contas, setContas] = useState([]);
@@ -39,7 +39,7 @@ export default function App() {
   }, [userId, mesSelecionado, anoSelecionado]);
 
   useEffect(() => {
-    fetch("http://localhost:5000/me", { credentials: "include" })
+    fetch("https://financial-control-ji39.onrender.com/me", { credentials: "include" })
       .then((res) => res.json())
       .then((data) => {
         if (data.user_id) setUserId(data.user_id);
@@ -171,7 +171,7 @@ export default function App() {
   }, [contasFiltradas]);
 
   const realizarLogin = async (username, password) => {
-    const res = await fetch("http://localhost:5000/login", {
+    const res = await fetch("https://financial-control-ji39.onrender.com/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ username, password }),
@@ -189,7 +189,7 @@ export default function App() {
 
   // Função de logout
   const logout = async () => {
-    await fetch("http://localhost:5000/logout", {
+    await fetch("https://financial-control-ji39.onrender.com/logout", {
       method: "POST",
       credentials: "include",
     });
