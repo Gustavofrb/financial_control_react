@@ -7,7 +7,7 @@ export default function FormularioConta({ onAdicionar, categorias }) {
   const [categoria, setCategoria] = useState(categorias[0] || "");
   const [vencimento, setVencimento] = useState("");
   const [parcelas, setParcelas] = useState(1);
-  
+
   useEffect(() => {
     if (!categorias.includes(categoria)) {
       setCategoria(categorias[0] || "");
@@ -75,7 +75,8 @@ export default function FormularioConta({ onAdicionar, categorias }) {
         type="date"
         value={vencimento}
         onChange={(e) => setVencimento(e.target.value)}
-        className="p-2 rounded border"
+        className="p-2 rounded border w-full"
+        placeholder="Vencimento"
       />
       <input
         type="number"
