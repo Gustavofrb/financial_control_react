@@ -1,7 +1,5 @@
 import { NumericFormat } from "react-number-format";
 import { useState, useEffect } from "react";
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
 
 export default function FormularioConta({ onAdicionar, categorias }) {
   const [descricao, setDescricao] = useState("");
@@ -9,7 +7,7 @@ export default function FormularioConta({ onAdicionar, categorias }) {
   const [categoria, setCategoria] = useState(categorias[0] || "");
   const [vencimento, setVencimento] = useState("");
   const [parcelas, setParcelas] = useState(1);
-
+  
   useEffect(() => {
     if (!categorias.includes(categoria)) {
       setCategoria(categorias[0] || "");
@@ -73,13 +71,11 @@ export default function FormularioConta({ onAdicionar, categorias }) {
           <option key={cat}>{cat}</option>
         ))}
       </select>
-      <DatePicker
-        selected={vencimento ? new Date(vencimento) : null}
-        onChange={(date) =>
-          setVencimento(date ? date.toISOString().slice(0, 10) : "")
-        }
-        className="p-2 rounded border w-full"
-        placeholderText="Vencimento"
+      <input
+        type="date"
+        value={vencimento}
+        onChange={(e) => setVencimento(e.target.value)}
+        className="p-2 rounded border"
       />
       <input
         type="number"
