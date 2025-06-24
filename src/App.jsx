@@ -77,21 +77,24 @@ export default function App() {
   // Adicionar conta (parcelada ou não)
   const adicionarConta = useCallback(
     async ({ descricao, valor, categoria, vencimento, parcelas }) => {
-      let mes = mesSelecionado;
-      let ano = anoSelecionado;
+      let mes, ano;
+      if (vencimento) {
+        const data = new Date(vencimento);
+        mes = data.getMonth() + 1;
+        ano = data.getFullYear();
+      } else {
+        mes = mesSelecionado;
+        ano = anoSelecionado;
+      }
       const valorParcela = Math.round((Number(valor) / parcelas) * 100) / 100;
       let valorRestante = Number(valor);
 
       for (let i = 0; i < parcelas; i++) {
-        if (mes > 12) {
-          mes = 1;
-          ano += 1;
-        }
         let vencimentoAjustado = vencimento;
         if (vencimento) {
           const data = new Date(vencimento);
-          data.setMonth(mes - 1);
-          data.setFullYear(ano);
+          data.setMonth(mes - 1 + i);
+          data.setFullYear(ano + Math.floor((mes - 1 + i) / 12));
           vencimentoAjustado = data.toISOString().slice(0, 10);
         }
         const valorAtual =
@@ -111,12 +114,15 @@ export default function App() {
             categoria,
             vencimento: vencimentoAjustado,
             pago: false,
-            mes,
-            ano,
+            mes: vencimento
+              ? new Date(vencimentoAjustado).getMonth() + 1
+              : mesSelecionado,
+            ano: vencimento
+              ? new Date(vencimentoAjustado).getFullYear()
+              : anoSelecionado,
           }),
           credentials: "include",
         });
-        mes += 1;
       }
       // Recarrega as contas após adicionar
       fetch(API_URL, { credentials: "include" })
