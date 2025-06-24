@@ -107,13 +107,19 @@ export default function App() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            descricao: `${descricao}${parcelas > 1 ? ` (${i + 1}/${parcelas})` : ""}`,
+            descricao: `${descricao}${
+              parcelas > 1 ? ` (${i + 1}/${parcelas})` : ""
+            }`,
             valor: valorAtual,
             categoria,
             vencimento: vencimentoAjustado,
             pago: false,
-            mes: vencimento ? new Date(vencimentoAjustado).getMonth() + 1 : mesSelecionado,
-            ano: vencimento ? new Date(vencimentoAjustado).getFullYear() : anoSelecionado,
+            mes: vencimento
+              ? new Date(vencimentoAjustado).getMonth() + 1
+              : mesSelecionado,
+            ano: vencimento
+              ? new Date(vencimentoAjustado).getFullYear()
+              : anoSelecionado,
           }),
           credentials: "include",
         });
@@ -412,11 +418,11 @@ export default function App() {
           <h2 className="text-lg font-semibold text-blue-700 mb-4 text-center">
             Gerenciar Categorias
           </h2>
-          <div className="flex gap-2 items-center justify-center mb-4">
+          <div className="flex flex-col sm:flex-row gap-2 items-center justify-center mb-4 w-full">
             <input
               type="text"
               placeholder="Nova categoria"
-              className="p-2 border rounded"
+              className="p-2 border rounded w-full sm:w-auto flex-1 min-w-0"
               value={novaCategoria}
               onChange={(e) => setNovaCategoria(e.target.value)}
             />
@@ -425,7 +431,7 @@ export default function App() {
                 adicionarCategoria(novaCategoria);
                 setNovaCategoria("");
               }}
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 w-full sm:w-auto"
             >
               Adicionar Categoria
             </button>
