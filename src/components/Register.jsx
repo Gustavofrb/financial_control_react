@@ -14,7 +14,7 @@ export default function Register({ onRegister, onShowLogin }) {
     const res = await fetch("https://financial-control-ji39.onrender.com/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, email, password }), // Inclui email
+      body: JSON.stringify({ username, email, password }), 
     });
     const data = await res.json();
     if (res.ok) {

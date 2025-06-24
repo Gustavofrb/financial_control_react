@@ -29,6 +29,18 @@ export default function App() {
   const [dark, setDark] = useState(() => {
     return localStorage.getItem("theme") === "dark";
   });
+  const [categorias, setCategorias] = useState([
+    "Alimentação",
+    "Moradia",
+    "Transporte",
+    "Lazer",
+    "Saúde",
+    "Outros",
+    "Entradas",
+  ]);
+  const [novaCategoria, setNovaCategoria] = useState("");
+  const [mensagem, setMensagem] = useState(""); // Para avisos
+  const [mensagemTipo, setMensagemTipo] = useState(""); // "sucesso" ou "erro"
 
   // Carregar contas da API ao iniciar ou ao alterar
   useEffect(() => {
@@ -51,6 +63,16 @@ export default function App() {
   const contasFiltradas = contas.filter(
     (c) => c.mes === mesSelecionado && c.ano === anoSelecionado
   );
+
+  // Função para exibir mensagem temporária
+  const exibirMensagem = (msg, tipo = "sucesso") => {
+    setMensagem(msg);
+    setMensagemTipo(tipo);
+    setTimeout(() => {
+      setMensagem("");
+      setMensagemTipo("");
+    }, 3000);
+  };
 
   // Adicionar conta (parcelada ou não)
   const adicionarConta = useCallback(
@@ -92,7 +114,7 @@ export default function App() {
             mes,
             ano,
           }),
-          credentials: "include", // <-- Adicione isto!
+          credentials: "include",
         });
         mes += 1;
       }
@@ -100,6 +122,18 @@ export default function App() {
       fetch(API_URL, { credentials: "include" })
         .then((res) => res.json())
         .then((data) => setContas(data));
+      if (
+        categoria &&
+        categoria
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .trim()
+          .toLowerCase() === "entradas"
+      ) {
+        exibirMensagem("Entrada adicionada com sucesso!", "sucesso");
+      } else {
+        exibirMensagem("Conta adicionada com sucesso!", "sucesso");
+      }
     },
     [mesSelecionado, anoSelecionado, contas]
   );
@@ -109,15 +143,12 @@ export default function App() {
       const conta = contas.find((c) => c.id === id);
       if (!conta) return;
 
-      // Verifica se é uma conta parcelada pelo padrão na descrição
       const match = conta.descricao.match(/^(.*)\s\(\d+\/(\d+)\)$/);
       let contasParaRemover = [];
 
       if (match) {
-        // Se for parcelada, pega o nome base e o total de parcelas
         const descricaoBase = match[1];
         const totalParcelas = Number(match[2]);
-        // Busca todas as parcelas com o mesmo nome base e total de parcelas
         contasParaRemover = contas.filter(
           (c) =>
             c.descricao.startsWith(descricaoBase) &&
@@ -138,6 +169,7 @@ export default function App() {
       setContas(
         contas.filter((c) => !contasParaRemover.some((r) => r.id === c.id))
       );
+      exibirMensagem("Conta removida com sucesso!", "sucesso");
     },
     [contas]
   );
@@ -194,27 +226,19 @@ export default function App() {
     });
 
     doc.save("relatorio-contas.pdf"); // Download automático
-
-    // Se quiser, pode remover as linhas abaixo:
-    // const pdfBlob = doc.output("blob");
-    // setPdfBlob(pdfBlob);
-    // setShowShareOptions(true);
   }, [contasFiltradas]);
 
   const realizarLogin = async (username, password) => {
-    const res = await fetch(
-      "https://financial-control-ji39.onrender.com/login",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
-        credentials: "include",
-      }
-    );
+    const res = await fetch("https://financial-control-ji39.onrender.com/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, password }),
+      credentials: "include",
+    });
     const data = await res.json();
     if (res.ok) {
       setUserId(data.user_id);
-      setPrecisaTrocarSenha(data.precisa_trocar_senha); // <-- Aqui!
+      setPrecisaTrocarSenha(data.precisa_trocar_senha);
       setErro("");
     } else {
       setErro(data.error || "Erro ao fazer login");
@@ -231,6 +255,50 @@ export default function App() {
     setErro("");
     setShowRegister(false);
     setShowResetSenha(false);
+  };
+
+  // Adicionar categoria (Entradas sempre última e única)
+  const adicionarCategoria = (novaCategoria) => {
+    const nova = novaCategoria.trim();
+    if (!nova) return;
+    if (
+      nova.toLowerCase() === "entradas" ||
+      categorias.map((c) => c.toLowerCase()).includes(nova.toLowerCase())
+    ) {
+      exibirMensagem("Categoria já existe!", "erro");
+      return;
+    }
+    // Remove Entradas, adiciona nova, depois Entradas de novo
+    const catsSemEntradas = categorias.filter(
+      (cat) => cat.toLowerCase() !== "entradas"
+    );
+    setCategorias([...catsSemEntradas, nova, "Entradas"]);
+    exibirMensagem("Categoria adicionada com sucesso!", "sucesso");
+  };
+
+  // Remover categoria (não remove Entradas)
+  const removerCategoria = (categoria) => {
+    if (categoria.toLowerCase() === "entradas") {
+      exibirMensagem("A categoria 'Entradas' não pode ser removida!", "erro");
+      return;
+    }
+    setCategorias(categorias.filter((cat) => cat !== categoria));
+    exibirMensagem("Categoria removida com sucesso!", "sucesso");
+  };
+
+  // Função para mover categorias
+  const moverCategoria = (indice, direcao) => {
+    const catsSemEntradas = categorias.filter(
+      (cat) => cat.toLowerCase() !== "entradas"
+    );
+    const novoIndice = indice + direcao;
+    if (novoIndice < 0 || novoIndice >= catsSemEntradas.length) return;
+    const novaLista = [...catsSemEntradas];
+    [novaLista[indice], novaLista[novoIndice]] = [
+      novaLista[novoIndice],
+      novaLista[indice],
+    ];
+    setCategorias([...novaLista, "Entradas"]);
   };
 
   if (!userId) {
@@ -252,6 +320,21 @@ export default function App() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="w-full max-w-xl bg-white rounded-lg shadow-lg p-8">
+        {/* Avisos */}
+        {mensagem && (
+          <div
+            className={`fixed top-6 left-1/2 transform -translate-x-1/2 z-50 px-6 py-3 rounded shadow-lg text-center font-semibold transition-all duration-300
+      ${
+        mensagemTipo === "sucesso"
+          ? "bg-green-100 text-green-800 border border-green-300"
+          : "bg-red-100 text-red-700 border border-red-300"
+      }`}
+            style={{ minWidth: 250, maxWidth: 400 }}
+          >
+            {mensagem}
+          </div>
+        )}
+
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold text-blue-700">
             Controle Financeiro
@@ -305,25 +388,107 @@ export default function App() {
             })}
           </select>
         </div>
-        <FormularioConta onAdicionar={adicionarConta} />
-        <ListaContas
-          contas={contasFiltradas}
-          onTogglePago={alternarPago}
-          onRemover={removerConta}
-          onEditar={editarConta}
-        />
+        <FormularioConta onAdicionar={adicionarConta} categorias={categorias} />
+
+        {/* Painel destacado para a lista de contas */}
+        <div className="mb-10 bg-gray-50 border border-gray-200 rounded-lg p-6 shadow-inner">
+          <ListaContas
+            contas={contasFiltradas}
+            onTogglePago={alternarPago}
+            onRemover={removerConta}
+            onEditar={editarConta}
+            categorias={categorias}
+          />
+        </div>
+
+        {/* Separador visual real */}
+        <hr className="my-10 border-t-2 border-gray-200" />
+
+        {/* Painel de categorias destacado e suave */}
+        <div className="mb-10 bg-blue-50 border border-blue-100 rounded-lg p-6 shadow-inner">
+          <h2 className="text-lg font-semibold text-blue-700 mb-4 text-center">
+            Gerenciar Categorias
+          </h2>
+          <div className="flex gap-2 items-center justify-center mb-4">
+            <input
+              type="text"
+              placeholder="Nova categoria"
+              className="p-2 border rounded"
+              value={novaCategoria}
+              onChange={(e) => setNovaCategoria(e.target.value)}
+            />
+            <button
+              onClick={() => {
+                adicionarCategoria(novaCategoria);
+                setNovaCategoria("");
+              }}
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              Adicionar Categoria
+            </button>
+          </div>
+          <div className="flex flex-wrap gap-2 justify-center">
+            {categorias.map((cat, idx) => {
+              const isEntradas = cat.toLowerCase() === "entradas";
+              const catsSemEntradas = categorias.filter(
+                (c) => c.toLowerCase() !== "entradas"
+              );
+              const isFirst = idx === 0;
+              const isLast = idx === catsSemEntradas.length - 1;
+              return (
+                <span
+                  key={cat}
+                  className="flex items-center bg-gray-200 px-3 py-1 rounded-full"
+                >
+                  {cat}
+                  {!isEntradas && (
+                    <>
+                      <button
+                        onClick={() => moverCategoria(idx, -1)}
+                        className="ml-2 text-gray-500 hover:text-blue-700 disabled:opacity-30"
+                        title="Mover para cima"
+                        disabled={isFirst}
+                        style={{ fontSize: 18, lineHeight: 1 }}
+                      >
+                        ▲
+                      </button>
+                      <button
+                        onClick={() => moverCategoria(idx, 1)}
+                        className="ml-1 text-gray-500 hover:text-blue-700 disabled:opacity-30"
+                        title="Mover para baixo"
+                        disabled={isLast}
+                        style={{ fontSize: 18, lineHeight: 1 }}
+                      >
+                        ▼
+                      </button>
+                    </>
+                  )}
+                  <button
+                    onClick={() => removerCategoria(cat)}
+                    className="ml-2 text-red-500 hover:text-red-700"
+                    title="Remover categoria"
+                    disabled={isEntradas}
+                  >
+                    &times;
+                  </button>
+                </span>
+              );
+            })}
+          </div>
+        </div>
+
         <button
           onClick={gerarPDF}
           className="
-    mt-6 flex items-center justify-center gap-2
-    px-5 py-2.5
-    bg-gradient-to-r from-blue-600 to-blue-400
-    text-white rounded-lg font-semibold shadow-md
-    hover:from-green-500 hover:to-green-400
-    hover:scale-105 active:scale-95 transition-all duration-200
-    focus:outline-none focus:ring-2 focus:ring-blue-300
-    mx-auto
-  "
+  mt-6 flex items-center justify-center gap-2
+  px-5 py-2.5
+  bg-gradient-to-r from-blue-600 to-blue-400
+  text-white rounded-lg font-semibold shadow-md
+  hover:from-green-500 hover:to-green-400
+  hover:scale-105 active:scale-95 transition-all duration-200
+  focus:outline-none focus:ring-2 focus:ring-blue-300
+  mx-auto
+"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"

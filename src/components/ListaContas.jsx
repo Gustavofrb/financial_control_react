@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { categorias } from "../data/categorias";
 import ResumoFinanceiro from "./ResumoFinanceiro";
 
 const icons = {
@@ -14,6 +13,7 @@ export default function ListaContas({
   onTogglePago,
   onRemover,
   onEditar,
+  categorias,
 }) {
   const [contaEditando, setContaEditando] = useState(null);
   const [descricao, setDescricao] = useState("");

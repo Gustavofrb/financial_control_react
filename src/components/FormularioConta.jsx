@@ -1,13 +1,18 @@
 import { NumericFormat } from "react-number-format";
-import { useState } from "react";
-import { categorias } from "../data/categorias";
+import { useState, useEffect } from "react";
 
-export default function FormularioConta({ onAdicionar }) {
+export default function FormularioConta({ onAdicionar, categorias }) {
   const [descricao, setDescricao] = useState("");
   const [valor, setValor] = useState("");
-  const [categoria, setCategoria] = useState(categorias[0]);
+  const [categoria, setCategoria] = useState(categorias[0] || "");
   const [vencimento, setVencimento] = useState("");
   const [parcelas, setParcelas] = useState(1);
+  
+  useEffect(() => {
+    if (!categorias.includes(categoria)) {
+      setCategoria(categorias[0] || "");
+    }
+  }, [categorias]);
 
   const handleAdicionar = (e) => {
     e.preventDefault();
