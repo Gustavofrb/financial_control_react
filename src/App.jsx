@@ -414,29 +414,11 @@ export default function App() {
         <hr className="my-10 border-t-2 border-gray-200" />
 
         {/* Painel de categorias destacado e suave */}
-        <div className="mb-10 bg-blue-50 border border-blue-100 rounded-lg p-6 shadow-inner">
+        <div className="mb-10 bg-blue-50 border border-blue-100 rounded-lg p-6 shadow-inner max-w-full overflow-x-auto">
           <h2 className="text-lg font-semibold text-blue-700 mb-4 text-center">
             Gerenciar Categorias
           </h2>
-          <div className="flex gap-2 items-center justify-center mb-4">
-            <input
-              type="text"
-              placeholder="Nova categoria"
-              className="p-2 border rounded"
-              value={novaCategoria}
-              onChange={(e) => setNovaCategoria(e.target.value)}
-            />
-            <button
-              onClick={() => {
-                adicionarCategoria(novaCategoria);
-                setNovaCategoria("");
-              }}
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-            >
-              Adicionar Categoria
-            </button>
-          </div>
-          <div className="flex flex-wrap gap-2 justify-center">
+          <div className="flex flex-wrap gap-2 justify-center items-center min-w-0">
             {categorias.map((cat, idx) => {
               const isEntradas = cat.toLowerCase() === "entradas";
               const catsSemEntradas = categorias.filter(
