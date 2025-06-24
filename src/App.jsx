@@ -107,13 +107,19 @@ export default function App() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            descricao: `${descricao}${parcelas > 1 ? ` (${i + 1}/${parcelas})` : ""}`,
+            descricao: `${descricao}${
+              parcelas > 1 ? ` (${i + 1}/${parcelas})` : ""
+            }`,
             valor: valorAtual,
             categoria,
             vencimento: vencimentoAjustado,
             pago: false,
-            mes: vencimento ? new Date(vencimentoAjustado).getMonth() + 1 : mesSelecionado,
-            ano: vencimento ? new Date(vencimentoAjustado).getFullYear() : anoSelecionado,
+            mes: vencimento
+              ? new Date(vencimentoAjustado).getMonth() + 1
+              : mesSelecionado,
+            ano: vencimento
+              ? new Date(vencimentoAjustado).getFullYear()
+              : anoSelecionado,
           }),
           credentials: "include",
         });
@@ -430,7 +436,7 @@ export default function App() {
               Adicionar Categoria
             </button>
           </div>
-          <div className="flex flex-wrap gap-2 justify-center">
+          <div className="flex flex-wrap gap-2 justify-center items-center min-w-0 max-w-full">
             {categorias.map((cat, idx) => {
               const isEntradas = cat.toLowerCase() === "entradas";
               const catsSemEntradas = categorias.filter(
